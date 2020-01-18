@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 //import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
@@ -26,15 +27,18 @@ public class Robot extends TimedRobot {//implements PIDOutput {
   //Create Objects
   private Timer time = new Timer();
   private DigitalInput limitswitch = new DigitalInput(9);
-  private WPI_TalonSRX rightmaster = new WPI_TalonSRX(3);
-  private WPI_TalonSRX leftmaster = new WPI_TalonSRX(5);
+  private WPI_VictorSPX rightmaster = new WPI_VictorSPX(3);
+  private WPI_VictorSPX leftmaster = new WPI_VictorSPX(1);
   private WPI_VictorSPX leftslave = new WPI_VictorSPX(2);
   private WPI_VictorSPX rightslave = new WPI_VictorSPX(4);
   private XboxController xboxelevator = new XboxController(1);
   private XboxController xboxdrive = new XboxController(0);
   private DifferentialDrive drive = new DifferentialDrive(leftmaster, rightmaster);
-  private TalonSRX elevator =  new TalonSRX(1); 
-  NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight-lime");
+ // private TalonSRX elevator =  new TalonSRX(1); 
+  NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+  NetworkTableEntry tx = table.getEntry("tx");
+  NetworkTableEntry ty = table.getEntry("ty");
+  NetworkTableEntry ta = table.getEntry("ta");
  
 
 /*
@@ -71,13 +75,14 @@ void hatchpush( double position,double position2, double seconds)
     elevator.configPeakOutputReverse(-.4, 30);
     elevator.config_kP(0, 1);   //**** NEED TUNING*****
     elevator.configAllowableClosedloopError(0, 5, 10);
+    */
     leftmaster.setInverted(false);
     rightmaster.setNeutralMode(NeutralMode.Brake);
     leftmaster.setNeutralMode(NeutralMode.Brake);
-    elevator.setNeutralMode(NeutralMode.Brake);
-    rightslave.follow(leftmaster);
-    leftslave.follow(rightmaster);
-    elevator.configForwardSoftLimitThreshold(31500);
+    //elevator.setNeutralMode(NeutralMode.Brake);
+    rightslave.follow(rightmaster);
+    leftslave.follow(leftmaster);
+    /*elevator.configForwardSoftLimitThreshold(31500);
     elevator.configForwardSoftLimitEnable(true);
     elevator.configReverseSoftLimitThreshold(1500);
     elevator.configReverseSoftLimitEnable(true);
@@ -92,9 +97,20 @@ void hatchpush( double position,double position2, double seconds)
    
   
   */
+  //read values periodically
+double x = tx.getDouble(0.0);
+double y = ty.getDouble(0.0);
+double area = ta.getDouble(0.0);
+
+//post to smart dashboard periodically
+SmartDashboard.putNumber("LimelightX", x);
+SmartDashboard.putNumber("LimelightY", y);
+SmartDashboard.putNumber("LimelightArea", area);
  
   
-  
+SmartDashboard.putString("leftaxis", Double.toString((xboxdrive.getTriggerAxis(Hand.kLeft))));
+SmartDashboard.putString("rightaxis", Double.toString(xboxdrive.getTriggerAxis(Hand.kRight)));
+SmartDashboard.putString("left", Double.toString(xboxdrive.getX(Hand.kLeft)));
  
 
  //Elevator Command Control
